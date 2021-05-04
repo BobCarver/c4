@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
     <style>
+        /* style of pieces that have been played */
         .red {
             fill: red;
             transform: translateY(240px);
@@ -13,6 +14,7 @@
         .yellow {fill: yellow;
             transform: translateY(240px);
         }
+        /* set up tramsion for drop and ignore mouse events */
         circle {
             transition: transform 1s;
             pointer-events: none
@@ -21,7 +23,8 @@
 </head>
 <body>
     <svg id="svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 240" width="100%" fill="blue">    
-        <defs>            
+        <defs> 
+            <!-- set up pattern of cicles that will be used to create a mask            -->
             <pattern id="circles" x="0" y="0" width="40" height="40" fill = "white" patternUnits="userSpaceOnUse">
                 <circle cx="20" cy="20" r="17" fill="black"/>
             </pattern>  
@@ -36,11 +39,15 @@
 </body>
 <script>
 const 
+// regex to test for a win
     win = /([12])(\1{3}|(.{5}\1){3}|(.{6}\1){3}|(.{7}\1){3})/,
     colWidth=40
 let 
+// game board is repesented as a string with 0 as avaiable position 
+// commas are used to keep the regex from wrapping around
     board = ',000000,000000,000000,000000,000000,000000,000000',
     moves = 0
+    // add pieces but position them up above the visible part of the screen
 document.querySelector('#game').innerHTML = 
     board.split('').map((p,i)=> p != '0'?'':`
         <circle cx="${20+colWidth*(i/7|0)}" cy="${20-colWidth*(i%7)}" r="18" id="p${i}" />`).join('')
@@ -49,12 +56,14 @@ document.querySelector('#game').innerHTML =
 document.querySelector('#back').addEventListener('click', ({x,y}) => {
     // convert to svg coordinates
     svgP = Object.assign(svg.createSVGPoint(), {x,y}).matrixTransform(svg.getScreenCTM().inverse())
+    // find column that mouse click was in see if a availbe position exits in that column
     const col = svgP.x/colWidth|0,
     first = board.match(new RegExp(`^(,.{6}){${col}},[^0]{0,5}0`))?.[0].slice(0,-1)
-    if( first) {
+    if( first) { // a legal position was ound for the column
         const player = ['red', 'yellow'][++moves%2]
-        board = first+['1','2'][moves%2]+board.slice(first.length+1)
-        window[`p${first.length}`].classList.add(player)
+        board = first+['1','2'][moves%2]+board.slice(first.length+1) // update board
+        window[`p${first.length}`].classList.add(player) // update screen
+        // check for win, if there is a win wait till the board updates
         if (board.match(win)){setTimeout(()=>alert(`${player} wins after ${moves} moves`), 1000)}
     }
 })
